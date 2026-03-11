@@ -6,7 +6,7 @@ import time
 from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from starlette.responses import StreamingResponse
 
 from app.config import settings
@@ -348,6 +348,25 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt() -> str:
+    """Allow crawlers; point to sitemap if site_url is set."""
+    base = (settings.site_url or "").rstrip("/")
+    sitemap = f"\nSitemap: {base}/sitemap.xml\n" if base else ""
+    return f"User-agent: *\nAllow: /{sitemap}"
+
+
+@app.get("/sitemap.xml", response_class=Response)
+async def sitemap_xml() -> Response:
+    """Sitemap for search engines."""
+    base = (settings.site_url or "https://example.com").rstrip("/")
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+</urlset>'''
+    return Response(content=xml, media_type="application/xml")
+
+
 @app.get("/api/v1/daily", response_model=GroupedRunResponse | None)
 async def get_daily_scan() -> GroupedRunResponse | None:
     """Precomputed daily scan for homepage. Large scan runs once per 24h in prod, or manually in dev."""
@@ -454,6 +473,13 @@ async def home() -> str:
     from jinja2 import Template
     return Template(DASHBOARD_HTML).render(
         stripe_checkout_url=settings.stripe_checkout_url or "#",
+        site_url=settings.site_url or "",
+        og_image_url=settings.og_image_url or "",
+        page_title="Stock Market AI | Plutus",
+        page_description="AI-powered sector discovery for macro and niche themes. Scan markets, detect events, and get trade ideas from news and market data.",
+        adsense_client=settings.adsense_client or "",
+        adsense_banner_slot=settings.adsense_banner_slot or "",
+        adsense_sidebar_slot=settings.adsense_sidebar_slot or "",
     )
 
 
@@ -463,7 +489,22 @@ DASHBOARD_HTML = r"""
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Stock Market AI | Plutus</title>
+<title>{{ page_title }}</title>
+<meta name="description" content="{{ page_description }}"/>
+{% if site_url %}<link rel="canonical" href="{{ site_url }}"/>{% endif %}
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="{{ page_title }}"/>
+<meta property="og:description" content="{{ page_description }}"/>
+{% if site_url %}<meta property="og:url" content="{{ site_url }}"/>{% endif %}
+{% if og_image_url %}<meta property="og:image" content="{{ og_image_url }}"/>{% endif %}
+<meta property="og:site_name" content="Plutus"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="{{ page_title }}"/>
+<meta name="twitter:description" content="{{ page_description }}"/>
+{% if og_image_url %}<meta name="twitter:image" content="{{ og_image_url }}"/>{% endif %}
+{% if adsense_client %}
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client }}" crossorigin="anonymous"></script>
+{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -700,8 +741,12 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     <p class="tagline">Research-grade signal discovery.</p>
   </section>
   <div id="adBanner" class="ad-slot ad-banner">
+    {% if adsense_client and adsense_banner_slot %}
+    <ins class="adsbygoogle" style="display:block" data-ad-client="{{ adsense_client }}" data-ad-slot="{{ adsense_banner_slot }}" data-ad-format="horizontal" data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle=window.adsbygoogle||[]).push({})</script>
+    {% else %}
     <span>Advertisement</span>
-    <!-- Replace with your ad code, e.g. Google AdSense: <ins class="adsbygoogle" data-ad-client="..." data-ad-slot="..."></ins> -->
+    {% endif %}
   </div>
   <div class="controls">
     <input id="watchlist" type="text" placeholder="Any topic: crypto, video games, AI, space, semiconductors..." onkeydown="if(event.key==='Enter')runScan(false)"/>
@@ -728,8 +773,12 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     </div>
     <aside id="adSidebar" class="page-sidebar">
       <div class="ad-slot ad-sidebar">
+        {% if adsense_client and adsense_sidebar_slot %}
+        <ins class="adsbygoogle" style="display:block" data-ad-client="{{ adsense_client }}" data-ad-slot="{{ adsense_sidebar_slot }}" data-ad-format="rectangle" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle=window.adsbygoogle||[]).push({})</script>
+        {% else %}
         <span>Advertisement</span>
-        <!-- Replace with your ad code -->
+        {% endif %}
       </div>
     </aside>
   </div>

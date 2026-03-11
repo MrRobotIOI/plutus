@@ -51,6 +51,13 @@ class Settings:
     env: str = (os.getenv("PLUTUS_ENV") or "dev").lower().strip()
     # Subscription: Stripe checkout URL for premium (set STRIPE_CHECKOUT_URL in env)
     stripe_checkout_url: str | None = _env_key("STRIPE_CHECKOUT_URL")
+    # SEO: site URL and OG image for social sharing (PLUTUS_SITE_URL, PLUTUS_OG_IMAGE_URL)
+    site_url: str | None = _env_key("PLUTUS_SITE_URL")
+    og_image_url: str | None = _env_key("PLUTUS_OG_IMAGE_URL")
+    # Google AdSense: publisher ID (ca-pub-xxx) and ad slot IDs from AdSense dashboard
+    adsense_client: str | None = _env_key("ADSENSE_CLIENT_ID")
+    adsense_banner_slot: str | None = _env_key("ADSENSE_BANNER_SLOT")
+    adsense_sidebar_slot: str | None = _env_key("ADSENSE_SIDEBAR_SLOT")
     # Scan speed: skip LLM score explanations, skip insight (earnings/mcap), limit symbol discovery
     skip_score_explanations: bool = os.getenv("PLUTUS_SKIP_SCORE_EXPLANATIONS", "1") == "1"
     include_insight: bool = os.getenv("PLUTUS_INCLUDE_INSIGHT", "0") == "1"
