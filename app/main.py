@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import StreamingResponse
 
 from app.config import settings
@@ -54,6 +55,11 @@ from app.news import (
 from app.scan import run_sector_scan
 
 app = FastAPI(title="plutus", version="0.1.0")
+
+# Serve static files (favicon, etc.)
+_static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.isdir(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 _SCAN_CACHE: dict[tuple[tuple[str, ...], int, int], tuple[GroupedRunResponse, float]] = {}
 _SCAN_CACHE_LOCK = asyncio.Lock()
@@ -515,6 +521,7 @@ DASHBOARD_HTML = r"""
 <meta name="twitter:title" content="{{ page_title }}"/>
 <meta name="twitter:description" content="{{ page_description }}"/>
 {% if og_image_url %}<meta name="twitter:image" content="{{ og_image_url }}"/>{% endif %}
+<link rel="icon" type="image/svg+xml" href="/static/stock-market-icon.svg?v=2"/>
 {% if adsense_client %}
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client }}" crossorigin="anonymous"></script>
 {% endif %}
@@ -533,6 +540,8 @@ body::after{content:"";position:fixed;inset:0;background-image:linear-gradient(r
 [data-theme="light"] body::after{background-image:linear-gradient(rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.03) 1px,transparent 1px);opacity:.6}
 .container{max-width:1400px;margin:0 auto;padding:1.5rem;position:relative;z-index:1}
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;padding:1rem 0}
+header .brand{display:flex;align-items:center;gap:.75rem}
+header .brand-logo{width:40px;height:40px;flex-shrink:0}
 header h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--text) 0%,var(--accent2) 50%,var(--accent3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .brand-subtitle{font-size:.55em;font-weight:500;color:var(--text2);margin-left:.4rem;vertical-align:middle}
@@ -698,6 +707,7 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
   .hero p{font-size:.9rem}
   .hero .tagline{font-size:.8rem}
   header{padding:.5rem 0;margin-bottom:1.25rem;flex-direction:column;align-items:flex-start}
+  header .brand-logo{width:32px;height:32px}
   header h1{font-size:1.35rem;line-height:1.3;word-break:break-word}
   .brand-subtitle{font-size:.5em;margin-left:.25rem}
   .subscribe-btn,.pro-badge{font-size:.8rem;padding:.4rem .9rem}
@@ -741,7 +751,10 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
 </script>
 <div class="container">
   <header style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-    <h1><span>Stock Market AI</span> <small class="brand-subtitle">Plutus</small></h1>
+    <div class="brand">
+      <img src="/static/stock-market-icon.svg" alt="" class="brand-logo" width="40" height="40"/>
+      <h1><span>Stock Market AI</span> <small class="brand-subtitle">Plutus</small></h1>
+    </div>
     <div style="display:flex;align-items:center;gap:.5rem">
       <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle theme">☀</button>
       {% if subscription_enabled %}<span id="proBadge" class="pro-badge" style="display:none" onclick="openSubscribeModal()" title="Manage subscription">Pro</span>
