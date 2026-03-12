@@ -138,7 +138,6 @@ async def compute_market_score(
     )
 
     if benchmark is None or sector_etf is None:
-        notes.append("We couldn't get live market data to confirm this idea.")
         return 0.5, {
             "sector_etf": etf_symbol,
             "market_data_source": None,
