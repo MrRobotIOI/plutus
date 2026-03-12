@@ -51,6 +51,7 @@ class Settings:
     env: str = (os.getenv("PLUTUS_ENV") or "dev").lower().strip()
     # Subscription: Stripe checkout URL for premium (set STRIPE_CHECKOUT_URL in env)
     stripe_checkout_url: str | None = _env_key("STRIPE_CHECKOUT_URL")
+    subscription_enabled: bool = os.getenv("PLUTUS_SUBSCRIPTION_ENABLED", "0") == "1"
     # SEO: site URL and OG image for social sharing (PLUTUS_SITE_URL, PLUTUS_OG_IMAGE_URL)
     site_url: str | None = _env_key("PLUTUS_SITE_URL")
     og_image_url: str | None = _env_key("PLUTUS_OG_IMAGE_URL")

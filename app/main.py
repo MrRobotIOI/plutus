@@ -480,6 +480,7 @@ async def home() -> str:
         adsense_client=settings.adsense_client or "",
         adsense_banner_slot=settings.adsense_banner_slot or "",
         adsense_sidebar_slot=settings.adsense_sidebar_slot or "",
+        subscription_enabled=settings.subscription_enabled,
     )
 
 
@@ -731,8 +732,8 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     <h1><span>Stock Market AI</span> <small class="brand-subtitle">Plutus</small></h1>
     <div style="display:flex;align-items:center;gap:.5rem">
       <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle theme">☀</button>
-      <span id="proBadge" class="pro-badge" style="display:none" onclick="openSubscribeModal()" title="Manage subscription">Pro</span>
-      <button id="subscribeBtn" class="subscribe-btn" onclick="openSubscribeModal()">Subscribe</button>
+      {% if subscription_enabled %}<span id="proBadge" class="pro-badge" style="display:none" onclick="openSubscribeModal()" title="Manage subscription">Pro</span>
+      <button id="subscribeBtn" class="subscribe-btn" onclick="openSubscribeModal()">Subscribe</button>{% endif %}
     </div>
   </header>
   <section class="hero">
@@ -783,6 +784,7 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     </aside>
   </div>
 </div>
+{% if subscription_enabled %}
 <div id="subscribeModal" class="modal-overlay" onclick="if(event.target===this)closeSubscribeModal()">
   <div class="modal">
     <span class="modal-close" onclick="closeSubscribeModal()">&times;</span>
@@ -809,9 +811,11 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     </p>
   </div>
 </div>
+{% endif %}
 <div class="disclaimer-bar">Not financial advice. For informational purposes only. Past performance does not guarantee future results. Do your own research.</div>
 <script>
 const STRIPE_CHECKOUT_URL = "{{ stripe_checkout_url }}";
+const SUBSCRIPTION_ENABLED = {{ "true" if subscription_enabled else "false" }};
 const SUBSCRIPTION_KEY = "plutus_subscribed";
 const THEME_KEY = "plutus_theme";
 let D=null,sel=null,viewMode='list';
@@ -824,6 +828,7 @@ document.addEventListener("DOMContentLoaded",function(){document.getElementById(
 function isSubscribed(){return localStorage.getItem(SUBSCRIPTION_KEY)==="true"}
 function setSubscribed(v){localStorage.setItem(SUBSCRIPTION_KEY,v?"true":"false");updateSubscriptionUI()}
 function updateSubscriptionUI(){
+  if(!SUBSCRIPTION_ENABLED){document.getElementById("adBanner").style.display="block";document.getElementById("adSidebar").style.display="block";return}
   const sub=isSubscribed();
   document.getElementById("adBanner").style.display=sub?"none":"block";
   document.getElementById("adSidebar").style.display=sub?"none":"block";
@@ -831,8 +836,9 @@ function updateSubscriptionUI(){
   document.getElementById("subscribeBtn").style.display=sub?"none":"inline-block";
 }
 function openSubscribeModal(){
-  document.getElementById("subscribeModal").classList.add("open");
-  document.getElementById("cancelOption").style.display=isSubscribed()?"block":"none";
+  if(!SUBSCRIPTION_ENABLED)return;
+  const m=document.getElementById("subscribeModal");if(m)m.classList.add("open");
+  const c=document.getElementById("cancelOption");if(c)c.style.display=isSubscribed()?"block":"none";
 }
 function closeSubscribeModal(){document.getElementById("subscribeModal").classList.remove("open")}
 function goToCheckout(plan){
