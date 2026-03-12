@@ -510,6 +510,7 @@ DASHBOARD_HTML = r"""
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{{ page_title }}</title>
 <meta name="description" content="{{ page_description }}"/>
+<meta name="google-site-verification" content="mRQxifE5nIAKO05k-SVJaErzfs4xjWkBEiM_eOjMhiE"/>
 {% if site_url %}<link rel="canonical" href="{{ site_url }}"/>{% endif %}
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="{{ page_title }}"/>
