@@ -356,6 +356,18 @@ async def robots_txt() -> str:
     return f"User-agent: *\nAllow: /{sitemap}"
 
 
+@app.get("/ads.txt", response_class=PlainTextResponse)
+async def ads_txt() -> str:
+    """AdSense ads.txt for authorized ad sellers. Required by AdSense."""
+    if not settings.adsense_client:
+        return "# ads.txt - set ADSENSE_CLIENT_ID to enable"
+    # Extract pub-XXXXXXXX from ca-pub-XXXXXXXX
+    pub_id = settings.adsense_client
+    if pub_id.startswith("ca-"):
+        pub_id = "pub-" + pub_id.split("-", 2)[-1]
+    return f"google.com, {pub_id}, DIRECT, f08c47fec0942fa0\n"
+
+
 @app.get("/sitemap.xml", response_class=Response)
 async def sitemap_xml() -> Response:
     """Sitemap for search engines."""
