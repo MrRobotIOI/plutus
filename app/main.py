@@ -714,7 +714,7 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
   .controls{flex-direction:column;align-items:stretch;gap:.75rem;margin-bottom:1rem}
   .controls input{width:100%;max-width:100%;padding:.75rem 1rem;font-size:16px}
   .btn-gundam{width:100%;padding:.85rem 1rem;letter-spacing:.08em;font-size:.85rem}
-  .ad-banner{height:70px;margin-bottom:1rem}
+  .ad-banner{height:50px;margin-bottom:1rem}
   .layout{max-width:100%}
   .sector-card{padding:1rem;border-radius:var(--radius)}
   .sector-card.active{border-radius:var(--radius) var(--radius) 0 0}
