@@ -381,6 +381,8 @@ async def sitemap_xml() -> Response:
     xml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>{base}/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>{base}/faq</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>'''
     return Response(content=xml, media_type="application/xml")
 
@@ -486,6 +488,77 @@ async def scan_stream(watchlist: str | None = None):
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
+def _base_head(title: str, description: str) -> str:
+    base = (settings.site_url or "").rstrip("/")
+    canon = f'<link rel="canonical" href="{base}"/>' if base else ""
+    return f'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{title}</title>
+<meta name="description" content="{description}"/>
+<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade"/>
+<meta name="google-site-verification" content="mRQxifE5nIAKO05k-SVJaErzfs4xjWkBEiM_eOjMhiE"/>
+{canon}
+<link rel="icon" type="image/svg+xml" href="/static/stock-market-icon.svg?v=2"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{{--bg:#06090e;--surface:#111827;--surface2:#1a2332;--border:#2d3a4f;--accent:#7c3aed;--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--radius:14px}}
+[data-theme="light"]{{--bg:#f8fafc;--surface:#fff;--surface2:#f1f5f9;--border:#cbd5e1;--text:#0f172a;--text2:#475569;--text3:#64748b}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem;line-height:1.6}}
+.container{{max-width:720px;margin:0 auto}}
+h1{{font-size:1.75rem;margin-bottom:1rem}}
+h2{{font-size:1.2rem;margin:1.5rem 0 .5rem;color:var(--text2)}}
+p{{margin-bottom:.75rem;color:var(--text2)}}
+a{{color:var(--accent);text-decoration:none}}
+a:hover{{text-decoration:underline}}
+.back{{display:inline-block;margin-bottom:1.5rem;font-weight:600}}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="/" class="back">← Back to Plutus</a>
+'''
+
+
+@app.get("/about", response_class=HTMLResponse)
+async def about_page() -> str:
+    base = _base_head("About Plutus: AI Stock Market Scanner", "Plutus is a free AI-powered stock market scanner that turns world news into sector signals and trade ideas. Learn how it works.")
+    content = """
+<h1>About Plutus</h1>
+<p>Plutus is an AI-powered stock market scanner that helps you discover sector signals and trade ideas from world news.</p>
+<h2>How It Works</h2>
+<p>Plutus scans 200+ sectors, from semiconductors and AI to oil, shipping, and niche themes. It ingests global news from trusted sources (Google News, NewsAPI, Finnhub, DuckDuckGo), uses AI to detect macro events, and maps them to sectors with transparent scoring.</p>
+<h2>What You Get</h2>
+<p>Each signal includes: news relevance score, market confirmation (price action vs benchmark), historical track record, and trade ideas with specific symbols. Scores combine news, market, and historical factors for a final confidence level.</p>
+<h2>Data Sources</h2>
+<p>News comes from multiple providers. Market data uses Polygon, Finnhub, or yfinance (free fallback). This is a research tool, not financial advice. Always do your own research.</p>
+"""
+    return base + content + "</div></body></html>"
+
+
+@app.get("/faq", response_class=HTMLResponse)
+async def faq_page() -> str:
+    base = _base_head("FAQ — Plutus Stock Market AI", "Frequently asked questions about Plutus: AI stock market scanner, sector signals, trade ideas, and how to use the tool.")
+    content = """
+<h1>Frequently Asked Questions</h1>
+<h2>What is Plutus?</h2>
+<p>Plutus is a free AI stock market scanner that turns world news into sector signals and trade ideas. It scans hundreds of sectors, detects macro events, and scores ideas with news, market, and historical data.</p>
+<h2>How do I use it?</h2>
+<p>Enter a topic (e.g. AI, semiconductors, oil) or run a broad scan. Results show sectors with signals, confidence scores, and trade ideas. Click a sector to see details and source articles.</p>
+<h2>Is it free?</h2>
+<p>Yes. The core scanner is free. A daily scan runs automatically in production. You can also run custom scans by topic.</p>
+<h2>Is this financial advice?</h2>
+<p>No. Plutus is a research tool for informational purposes only. Past performance does not guarantee future results. Do your own research before making investment decisions.</p>
+<h2>What sectors does it cover?</h2>
+<p>200+ sectors including tech (AI, semiconductors, cloud), commodities (oil, copper, uranium), industrials (shipping, aerospace), and niche themes (gaming, EVs, solar).</p>
+"""
+    return base + content + "</div></body></html>"
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home() -> str:
     from jinja2 import Template
@@ -510,8 +583,12 @@ DASHBOARD_HTML = r"""
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{{ page_title }}</title>
 <meta name="description" content="{{ page_description }}"/>
+<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade, market signals, trade ideas, stock scanner, AI stock analysis"/>
 <meta name="google-site-verification" content="mRQxifE5nIAKO05k-SVJaErzfs4xjWkBEiM_eOjMhiE"/>
 {% if site_url %}<link rel="canonical" href="{{ site_url }}"/>{% endif %}
+{% if site_url %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Plutus","description":"AI-powered stock market sector scanner. Turn world news into actionable trade ideas with transparent scoring.","url":"{{ site_url }}","applicationCategory":"FinanceApplication","operatingSystem":"Any"}</script>
+{% endif %}
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="{{ page_title }}"/>
 <meta property="og:description" content="{{ page_description }}"/>
@@ -669,10 +746,17 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
 .empty-state p{font-size:.95rem;max-width:420px;margin:0 auto;line-height:1.6;transition:opacity .15s;font-weight:500}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:.5rem;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-.hero{margin-bottom:2rem;padding:2rem 0;text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
+.hero{margin-bottom:1.5rem;padding:2rem 0;text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
 .hero h2{font-size:1.5rem;font-weight:700;line-height:1.35;color:var(--text);margin-bottom:1rem;letter-spacing:-.02em}
 .hero p{font-size:1rem;color:var(--text2);line-height:1.65;margin-bottom:.75rem}
 .hero .tagline{font-size:.9rem;color:var(--text3);font-weight:500}
+.how-it-works{max-width:720px;margin:0 auto 1.5rem;padding:1.25rem 1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);text-align:left}
+.how-it-works h3{font-size:1rem;font-weight:700;margin-bottom:.75rem;color:var(--text)}
+.how-it-works ul{margin:0 0 .75rem;padding-left:1.25rem;color:var(--text2);font-size:.9rem;line-height:1.6}
+.how-it-works li{margin-bottom:.35rem}
+.how-it-works .popular-topics{font-size:.85rem;color:var(--text3);margin:0}
+.how-it-works .popular-topics a{color:var(--accent2);font-weight:500}
+.how-it-works .popular-topics a:hover{text-decoration:underline}
 .disclaimer-bar{color:var(--text3);margin-top:3rem;padding:.75rem 1.5rem;font-size:.7rem;text-align:center;line-height:1.5;letter-spacing:.03em;opacity:.85;border-top:1px solid var(--border)}
 .ad-slot{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:.7rem;letter-spacing:.06em;overflow:hidden}
 .ad-banner{width:100%;max-width:728px;height:90px;margin:0 auto 1.5rem}
@@ -703,8 +787,10 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
 .ad-sidebar{min-height:250px;max-width:300px;margin:0 auto}
 @media(max-width:640px){
   .container{padding:1rem;padding-bottom:2rem;overflow-x:hidden}
-  .hero{padding:1.25rem 0;margin-bottom:1.5rem}
+  .hero{padding:1.25rem 0;margin-bottom:1rem}
   .hero h2{font-size:1.2rem;margin-bottom:.75rem}
+  .how-it-works{padding:1rem;margin-bottom:1rem}
+  .how-it-works h3{font-size:.95rem}
   .hero p{font-size:.9rem}
   .hero .tagline{font-size:.8rem}
   header{padding:.5rem 0;margin-bottom:1.25rem;flex-direction:column;align-items:flex-start}
@@ -763,9 +849,18 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
     </div>
   </header>
   <section class="hero">
-    <h2>AI-powered macro research that turns world news into actionable market signals</h2>
-    <p>Plutus scans hundreds of sectors, ingests global news from trusted sources, and uses AI to detect macro events, then maps them to sectors and trade ideas with transparent scoring.</p>
-    <p class="tagline">Research-grade signal discovery.</p>
+    <h2>AI-Powered Stock Market Scanner — News to Trade Ideas</h2>
+    <p>Plutus is a free AI stock market scanner that scans 200+ sectors, ingests global news from trusted sources, and uses AI to detect macro events. Get sector signals, trade ideas, and transparent scoring — turn headlines into actionable market signals.</p>
+    <p class="tagline">Research-grade signal discovery. Not financial advice.</p>
+  </section>
+  <section class="how-it-works">
+    <h3>How it works</h3>
+    <ul>
+      <li>Enter a topic (AI, semiconductors, oil) or run a broad scan</li>
+      <li>AI detects macro events from news and scores them with market confirmation</li>
+      <li>Get trade ideas with symbols, confidence levels, and source articles</li>
+    </ul>
+    <p class="popular-topics">Try: <a href="#" onclick="document.getElementById('watchlist').value='AI';document.getElementById('watchlist').focus();return false">AI</a> · <a href="#" onclick="document.getElementById('watchlist').value='semiconductors';document.getElementById('watchlist').focus();return false">semiconductors</a> · <a href="#" onclick="document.getElementById('watchlist').value='oil';document.getElementById('watchlist').focus();return false">oil</a> · <a href="#" onclick="document.getElementById('watchlist').value='shipping';document.getElementById('watchlist').focus();return false">shipping</a> · <a href="#" onclick="document.getElementById('watchlist').value='uranium';document.getElementById('watchlist').focus();return false">uranium</a></p>
   </section>
   <div id="adBanner" class="ad-slot ad-banner">
     {% if adsense_client and adsense_banner_slot %}
@@ -838,7 +933,7 @@ header h1 span{background:linear-gradient(135deg,var(--accent2),var(--accent3));
   </div>
 </div>
 {% endif %}
-<div class="disclaimer-bar">Not financial advice. For informational purposes only. Past performance does not guarantee future results. Do your own research.</div>
+<div class="disclaimer-bar">Not financial advice. For informational purposes only. Past performance does not guarantee future results. Do your own research. <a href="/about" style="color:var(--text2);margin-left:.5rem">About</a> · <a href="/faq" style="color:var(--text2)">FAQ</a></div>
 <script>
 const STRIPE_CHECKOUT_URL = "{{ stripe_checkout_url }}";
 const SUBSCRIPTION_ENABLED = {{ "true" if subscription_enabled else "false" }};
@@ -937,7 +1032,7 @@ async function loadDaily(){
     if(!r.ok)return;
     const d=await r.json();
     if(d&&d.sector_groups&&d.sector_groups.length>0){
-      D=d;sel=null;
+      D=d;sel=d.sector_groups?.[0]?.sector_key||null;
       const t=new Date(d.generated_at).toLocaleTimeString();
       document.getElementById("scanStatus").textContent=`Daily scan: ${d.sector_groups.length} sectors with signals (${t}) — Run a custom scan below`;
       renderList();
@@ -976,7 +1071,7 @@ function runScan(cancelOnly){
   es.addEventListener("result",function(e){
     if(_currentEventSource!==es)return;
     done();
-    const d=JSON.parse(e.data);D=d;sel=null;
+    const d=JSON.parse(e.data);D=d;sel=d.sector_groups?.[0]?.sector_key||null;
     const t=new Date(d.generated_at).toLocaleTimeString();
     st.textContent=`Scanned ${d.sectors_scanned.length} sectors — ${d.sector_groups.length} produced actionable signals (${t})`;
     renderList();
