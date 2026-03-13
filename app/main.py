@@ -498,7 +498,7 @@ def _base_head(title: str, description: str) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{title}</title>
 <meta name="description" content="{description}"/>
-<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade"/>
+<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade, market signals, trade ideas, stock scanner, AI stock analysis, sector rotation, thematic investing, niche sectors, alternative energy stocks, uranium stocks, semiconductor stocks, AI stocks, shipping stocks, oil stocks, macro investing, headline trading, news based trading, event driven investing, stock market news analysis"/>
 <meta name="google-site-verification" content="mRQxifE5nIAKO05k-SVJaErzfs4xjWkBEiM_eOjMhiE"/>
 {canon}
 <link rel="icon" type="image/svg+xml" href="/static/stock-market-icon.svg?v=2"/>
@@ -583,7 +583,7 @@ DASHBOARD_HTML = r"""
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{{ page_title }}</title>
 <meta name="description" content="{{ page_description }}"/>
-<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade, market signals, trade ideas, stock scanner, AI stock analysis"/>
+<meta name="keywords" content="stock market AI, AI trading signals, sector scanner, macro research, news to trade, market signals, trade ideas, stock scanner, AI stock analysis, sector rotation, thematic investing, niche sectors, alternative energy stocks, uranium stocks, semiconductor stocks, AI stocks, shipping stocks, oil stocks, macro investing, headline trading, news based trading, event driven investing, stock market news analysis"/>
 <meta name="google-site-verification" content="mRQxifE5nIAKO05k-SVJaErzfs4xjWkBEiM_eOjMhiE"/>
 {% if site_url %}<link rel="canonical" href="{{ site_url }}"/>{% endif %}
 {% if site_url %}
